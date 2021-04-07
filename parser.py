@@ -2,6 +2,7 @@ from abc import ABCMeta ,abstractmethod
 import sys , json , xmltodict , csv
 import xml.etree.ElementTree as ET
 #define the main abstraction class
+##################################
 class IConvert(metaclass=ABCMeta):
     @abstractmethod
     def importdata():
@@ -14,61 +15,82 @@ class IConvert(metaclass=ABCMeta):
         pass
     
 #define the XML parsing class
+#############################
+#############################
+#############################
 class XmlParser(IConvert):
+    #define the inputs and jsonexport 
     def __init__(self,file):
-        #define the inputs
         self.file = file
-#import the data and parse it to dict
+        self.jsoncontent = {}
+    #import the data and parse it to dict
     def importdata(self):
         xmlcontent = open(self.file).read()
-        jsoncontent = xmltodict.parse(xmlcontent) 
-        return jsoncontent
-#convert the dict to json
+        self.jsoncontent = xmltodict.parse(xmlcontent) 
+    #convert the dict to json
     def convert(self):
-        jsoncontent = self.importdata()
-        jsoncontent['file_name'] = str('xml/' + self.file)
-#convert main fields to small case
-        jsoncontent['transaction'] ,jsoncontent['transaction']["customer"] ,jsoncontent['transaction']["date"] , jsoncontent['Transaction']['Customer']['id'] = jsoncontent['Transaction'] , jsoncontent['Transaction']['Customer'] ,jsoncontent['Transaction']["Date"],jsoncontent['Transaction']['Customer']['@id']
-#convert unites to vehicles list 
-        jsoncontent['transaction']["vehicles"] = []
-        for key,value in jsoncontent['transaction']['Customer']['Units'].items():  
+        self.importdata()
+        self.jsoncontent['file_name'] = str('xml/' + self.file)
+        #convert main fields to small case
+        self.jsoncontent['transaction'] ,self.jsoncontent['transaction']["customer"] ,self.jsoncontent['transaction']["date"] , self.jsoncontent['Transaction']['Customer']['id'] = self.jsoncontent['Transaction'] , self.jsoncontent['Transaction']['Customer'] ,self.jsoncontent['Transaction']["Date"],self.jsoncontent['Transaction']['Customer']['@id']
+        #convert unites to vehicles list 
+        self.jsoncontent['transaction']["vehicles"] = []
+        for key,value in self.jsoncontent['transaction']['Customer']['Units'].items():  
             if(isinstance(value,dict)):
                 value['id'] ,value['make'] ,value['vinNumber'] = value['@id'] , value['Make'] ,value['VinNumber']
                 del value['@id'] , value['VinNumber'] , value['Make']
-                jsoncontent['transaction']["vehicles"].append(dict(value))
+                self.jsoncontent['transaction']["vehicles"].append(dict(value))
             #Deal with list of vehicles
             elif(isinstance(value,list)):
                 for element in value:
                     element['id'] ,element['make'] ,element['vinNumber'] = element['@id'] , element['Make'] ,element['VinNumber']
                     del element['@id'] , element['VinNumber'] , element['Make']
-                    jsoncontent['transaction']["vehicles"].append(dict(element))
-        del jsoncontent['Transaction'] , jsoncontent['transaction']['Customer']['Units'] , jsoncontent['transaction']['Customer'] ,jsoncontent['transaction']["Date"],jsoncontent['transaction']['customer']['@id']
-        return jsoncontent
-#Export converted json
+                    self.jsoncontent['transaction']["vehicles"].append(dict(element))
+        del self.jsoncontent['Transaction'] , self.jsoncontent['transaction']['Customer']['Units'] , self.jsoncontent['transaction']['Customer'] ,self.jsoncontent['transaction']["Date"],self.jsoncontent['transaction']['customer']['@id']
+    #Export converted json
     def exportdata(self):
-        jsoncontent = self.convert()
+        self.convert()
         out_file = open("parsing_result/sample.json", "w")
-        res = json.dump(jsoncontent,out_file)
-          
-#define the CSV parsing class       
+        res = json.dump(self.jsoncontent,out_file)      
+#define the CSV parsing class      
+# #############################
+# #############################
+# ############################# 
 class CsvParser(IConvert):
-    def __init__(self,vfile,cfile):
-        #define the inputs , vfile for vehicles , cfile for customers
+    def __init__(self,cfile,vfile):
+        #define the inputs , vfile for vehicles , cfile for customers , jsonexport
         self.cfile = cfile
         self.vfile = vfile
+        self.jsonexport = {}
+        self.customer = {}
+        self.vehicles = []
+        self.transaction = [self.vehicles,self.customer]
     def importdata(self):
-        with open(cfile) as csvcontent:
-            csv_reader = csv.reader(csvcontent, delimiter = ',')
-            for row in csv_reader:
-                print(row)
+        self.jsonexport['file_name'] = str('csv/' + self.cfile + 'csv/' + self.vfile)
+        self.jsonexport['transaction'] = self.transaction
         
     def convert(self):
-        pass
+        self.importdata()
+        with open(self.cfile) as custcontent:
+            cust_reader = csv.reader(custcontent, delimiter = ',')
+            #headers = next(cust_reader)
+            for row in cust_reader:
+                pass
+        with open(self.vfile) as vehicontent:
+            vehi_reader = csv.reader(vehicontent, delimiter = ',')
+            for row in vehi_reader:
+                pass
+                #print(row)
+        
     def exportdata(self):
-        jsoncontent = self.convert()
+        self.convert()
+        print(self.jsonexport)
         out_file = open("parsing_result/sample.json", "w")
-        res = json.dump(jsoncontent,out_file)
+        res = json.dump(self.jsonexport,out_file)
 #define the main creator of the Json "factory" 
+#############################
+#############################
+#############################
 class JsonCreator:
     @staticmethod
     def convert_to_json(thetype):
@@ -77,7 +99,7 @@ class JsonCreator:
             return XmlParser("input_data/xml/" + sys.argv[2]).exportdata()
         elif thetype == 'csv':
             #pass the files from the cml
-            return CsvParser("input_data/csv/" + sys.argv[2],sys.argv[3]).convert
+            return CsvParser("input_data/csv/" + sys.argv[2],"input_data/csv/" + sys.argv[3]).exportdata()
         else :
             return None
 if __name__ == "__main__":
