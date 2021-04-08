@@ -64,27 +64,35 @@ class CsvParser(IConvert):
         self.jsonexport = {}
         self.customer = {}
         self.vehicles = []
-        self.transaction = [self.vehicles,self.customer]
+        self.date = ''
+        self.transactions = []
     def importdata(self):
         self.jsonexport['file_name'] = str('csv/' + self.cfile + 'csv/' + self.vfile)
-        self.jsonexport['transaction'] = self.transaction
-        
+        #self.jsonexport['transactions'] = self.transactions
     def convert(self):
         self.importdata()
         with open(self.cfile) as custcontent:
             cust_reader = csv.reader(custcontent, delimiter = ',')
+            cust_reader.__next__()
             #headers = next(cust_reader)
             for row in cust_reader:
-                pass
+                self.customer = {'id': row[0], 'name':row[1],'address':row[2],'phone':row[3]}
+                self.transactions.append({'vehicles':self.vehicles,'customer':self.customer,'date':row[4]})
         with open(self.vfile) as vehicontent:
             vehi_reader = csv.reader(vehicontent, delimiter = ',')
-            for row in vehi_reader:
-                pass
-                #print(row)
-        
+            vehi_reader.__next__()
+            arr = []
+            for el in vehi_reader:
+                arr.append(el)
+            for transaction in self.transactions:
+                data = []
+                for row in arr:
+                    if (transaction["customer"]['id'] == row[3]):
+                        data.append({'id':row[0],'make':row[1],'vinNumber':row[2]})
+                transaction['vehicles'] = data
+        self.jsonexport['transactions'] = self.transactions
     def exportdata(self):
         self.convert()
-        print(self.jsonexport)
         out_file = open("parsing_result/sample.json", "w")
         res = json.dump(self.jsonexport,out_file)
 #define the main creator of the Json "factory" 
