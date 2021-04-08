@@ -66,18 +66,19 @@ class CsvParser(IConvert):
         self.vehicles = []
         self.date = ''
         self.transactions = []
+    #import data and set filename
     def importdata(self):
         self.jsonexport['file_name'] = str('csv/' + self.cfile + 'csv/' + self.vfile)
-        #self.jsonexport['transactions'] = self.transactions
     def convert(self):
         self.importdata()
+        #set Json structure and add transactions 
         with open(self.cfile) as custcontent:
             cust_reader = csv.reader(custcontent, delimiter = ',')
             cust_reader.__next__()
-            #headers = next(cust_reader)
             for row in cust_reader:
                 self.customer = {'id': row[0], 'name':row[1],'address':row[2],'phone':row[3]}
                 self.transactions.append({'vehicles':self.vehicles,'customer':self.customer,'date':row[4]})
+        #populate the Json with vehicles
         with open(self.vfile) as vehicontent:
             vehi_reader = csv.reader(vehicontent, delimiter = ',')
             vehi_reader.__next__()
@@ -91,6 +92,7 @@ class CsvParser(IConvert):
                         data.append({'id':row[0],'make':row[1],'vinNumber':row[2]})
                 transaction['vehicles'] = data
         self.jsonexport['transactions'] = self.transactions
+    #export the result
     def exportdata(self):
         self.convert()
         out_file = open("parsing_result/sample.json", "w")
@@ -104,10 +106,23 @@ class JsonCreator:
     def convert_to_json(thetype):
         if thetype == 'xml':
             #pass the files from the cml
-            return XmlParser("input_data/xml/" + sys.argv[2]).exportdata()
+            if(len(sys.argv) != 3):
+                print("Please enter correct files name and order")
+            else:
+                try: 
+                    return XmlParser("input_data/xml/" + sys.argv[2]).exportdata()
+                except:
+                    print("Error in program , programe ends") 
+
         elif thetype == 'csv':
             #pass the files from the cml
-            return CsvParser("input_data/csv/" + sys.argv[2],"input_data/csv/" + sys.argv[3]).exportdata()
+            if(len(sys.argv) != 4):
+                print("Please enter correct files name and order")
+            else : 
+                try:
+                    return CsvParser("input_data/csv/" + sys.argv[2],"input_data/csv/" + sys.argv[3]).exportdata() 
+                except: 
+                    print("Error in program , programe ends")     
         else :
             return None
 if __name__ == "__main__":
