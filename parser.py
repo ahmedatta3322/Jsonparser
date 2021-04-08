@@ -111,8 +111,8 @@ class JsonCreator:
             else:
                 try: 
                     return XmlParser("input_data/xml/" + sys.argv[2]).exportdata()
-                except:
-                    print("Error in program , programe ends") 
+                except Exception as e:
+                    print("Error in program , programe ends" , e) 
 
         elif thetype == 'csv':
             #pass the files from the cml
@@ -121,8 +121,8 @@ class JsonCreator:
             else : 
                 try:
                     return CsvParser("input_data/csv/" + sys.argv[2],"input_data/csv/" + sys.argv[3]).exportdata() 
-                except: 
-                    print("Error in program , programe ends")     
+                except Exception as e: 
+                    print("Error in program , programe ends" , e)     
         else :
             return None
 if __name__ == "__main__":
