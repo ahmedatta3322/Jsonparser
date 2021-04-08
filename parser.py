@@ -110,7 +110,8 @@ class JsonCreator:
                 print("Please enter correct files name and order")
             else:
                 try: 
-                    return XmlParser("input_data/xml/" + sys.argv[2]).exportdata()
+                    XmlParser("input_data/xml/" + sys.argv[2]).exportdata()
+                    return(print("Success data parsed , check the parsing_result"))
                 except Exception as e:
                     print("Error in program , programe ends" , e) 
 
@@ -120,7 +121,8 @@ class JsonCreator:
                 print("Please enter correct files name and order")
             else : 
                 try:
-                    return CsvParser("input_data/csv/" + sys.argv[2],"input_data/csv/" + sys.argv[3]).exportdata() 
+                    CsvParser("input_data/csv/" + sys.argv[2],"input_data/csv/" + sys.argv[3]).exportdata() 
+                    return(print("Success data parsed , check the parsing_result"))      
                 except Exception as e: 
                     print("Error in program , programe ends" , e)     
         else :
